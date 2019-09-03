@@ -18,7 +18,7 @@
   "developerRepoUrl": "https://github.com/stuartthompson/daskeyboard-q-test",
   "licenseUrl": "http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt",
   "changelogUrl": "CHANGELOG.md",
-  "license": "MIT",
+  "license": "GPL-3.0-or-later",
   "readMeUrl": "README.md",
   "readMeEndUserUrl": "README_ENDUSER.md",
   "main": "index.js",
