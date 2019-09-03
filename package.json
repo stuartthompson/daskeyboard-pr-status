@@ -1,0 +1,82 @@
+{
+  "name": "daskeyboard-applet--pr-status",
+  "displayName": "DasKeyboard PR Status Applet",
+  "version": "1.0.0",
+  "description": "Provides a visual indication of the status of pull requests in a Stash repository..",
+  "longDescription": "This applet polls the Stash API for the status of pull requests in a particular repository. It uses a bearer token to authenticate with the server.",
+  "officialProductName": "Q PR Status",
+  "appUrl": "",
+  "isSingleton": true,
+  "videoUrl": "",
+  "icon": "assets/icon.png",
+  "image": "assets/q-cpu-usage.png",
+  "publisher": "Stuart Thompson",
+  "authorName": "Stuart Thompson",
+  "authorUrl": "https://twitter.com/stuartthompson",
+  "issuesUrl": "https://github.com/stuartthompson/daskeyboard-pr-status/issues",
+  "homePageUrl": "https://github.com/stuartthompson/daskeyboard-pr-status",
+  "developerRepoUrl": "https://github.com/stuartthompson/daskeyboard-q-test",
+  "licenseUrl": "http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt",
+  "changelogUrl": "CHANGELOG.md",
+  "license": "MIT",
+  "readMeUrl": "README.md",
+  "readMeEndUserUrl": "README_ENDUSER.md",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "mocha"
+  },
+  "engines": {
+    "das-keyboard-q": "3.0.0"
+  },
+  "dependencies": {
+    "daskeyboard-applet": "^2.7.12",
+    "mocha": "^5.2.0",
+    "os-utils": "^0.0.14",
+    "request": "^2.88.0"
+  },
+  "qConfig": {
+    "geometry": {
+      "width": 12,
+      "height": 1,
+      "defaults": {
+        "origin": {
+          "x": 0,
+          "y": 1
+        }
+      }
+    },
+    "questions": [
+      {
+        "key": "defaultColor",
+        "label": "Choose the color of empty keys",
+        "help": "Keys that represent pull requests will be lit up all others will be set to this color.",
+        "required": true,
+        "order": 1,
+        "value": "#000000",
+        "controlType": "color"
+      },
+      {
+        "key": "stashURL",
+        "label": "Enter the url of the stash repository.",
+        "help": "This url is used to access the Stash API.",
+        "required": true,
+        "order": 2,
+        "value": "https://stash/rest/api/1.0/projects/FAL/repos/falcon/pull-requests",
+        "controlType": "textbox"
+      },
+      {
+        "key": "bearerToken",
+        "label": "Enter the bearer token used to poll Stash.",
+        "help": "This bearer token will be used to call the Stash API to get the status of open pull requests.",
+        "required": true,
+        "order": 3,
+        "value": "",
+        "controlType": "textbox"
+      }
+    ],
+    "applet": {
+      "defaults": {}
+    }
+  }
+}
