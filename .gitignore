@@ -1,0 +1,4 @@
+# Git ignore file for Das Keyboard PR Status Applet
+
+# Node modules folder
+node_modules/
