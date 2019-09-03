@@ -5,23 +5,29 @@ const logger = q.logger;
 const TOTAL_KEYS = 12;
 var prListHash = "";
 
-class QTest extends q.DesktopApp {
+/**
+ * Implements a DasKeyboard Q Applet to monitor the status of pull requests in Stash.
+ */
+class PRStatusMonitor extends q.DesktopApp {
   constructor() {
     super();
 
-    // Hack to disable certificate chain failures during execution
+    // Hack to ignore certificate validation failures
     process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = 0
 
-    // Poll for new PRs every 10s
+    // Poll for pull requests every 10s
     this.pollingInterval = 10000;
-    logger.info("Stash PR Monitor is good to go.");
+    logger.info("Pull Request Status Applet Started");
   }
 
-  // call this function every pollingInterval
+  /**
+   * Runs the logic of the applet.
+   * 
+   * This function is called every polling interval.
+   */
   async run() {
     let pullRequests = await this.getPullRequests();
-    let points = this.generatePoints(pullRequests);
-
+    
     // Store list of ids
     const newListHash = this.getPRListHash(pullRequests);
     var prListChanged = false;
@@ -35,56 +41,79 @@ class QTest extends q.DesktopApp {
       message += " List of PRs has changed since last update.";
     }
 
-    return new q.Signal({
+    // Build the list of points
+    let points = this.generatePoints(pullRequests);
+
+    // Build the signal
+    const signal = new q.Signal({
       points: [points],
       name: "Pull Request List Updated",
       message: message,
       isMuted: prListChanged
     });
+
+    return signal;
   }
 
-  getRequestHeaders() {
-    return {
-      'Authorization': `Bearer ${this.config.bearerToken}`
-    }
-  }
-
+  /**
+   * Gets the list of pull requests from Stash.
+   */
   async getPullRequests() {
     const url = this.config.stashURL;
-    logger.info('Requesting list of PRs.');
+    logger.info(`Requesting list of pull requests from ${this.config.stashURL}`);
 
+    // Return a promise of the list of pull requests
     return request.get({
       url: url,
-      headers: this.getRequestHeaders(),
+      headers: { 'Authorization': `Bearer ${this.config.bearerToken}` },
       json: true
     }).then(body => {
       if (body.values) {
-        // Just return number of PRs for now
+        // 'values' contains the pull request details
         return body.values;
       }
       else {
         throw new Error("No PRs returned.");
       }
     }).catch((error) => {
-      logger.error(`Error when reading PRs: ${error}`);
-      throw new Error(`Error when reading PRs: ${error}`);
+      // Log and throw the error
+      const errMessage = `Error reading pull requests. Error: ${error}`;
+      logger.error(errMessage);
+      throw new Error(errMessage);
     });
   }
 
-  isPRApproved(pullRequest) {
-    const reviewers = pullRequest.reviewers;
-    
-    for (var i = 0; i < reviewers.length; i++) {
-      if (reviewers[i].approved === true) {
-        // At least one approval found
-        return true;
+  /**
+   * Generates the points to send to the device.
+   * 
+   * @param {*} pullRequests - The list of pull requests being visualized.
+   */
+  generatePoints(pullRequests) {
+    let qPoints = [];
+    const numPRs = pullRequests.length;
+
+    // Generate 10 points
+    for (let i = 0; i < TOTAL_KEYS; i++) {
+      if (i < numPRs) {
+        // Get the status color for this PR
+        const color = this.getPRStatusColor(pullRequests[i]);
+        // Push a new point
+        qPoints.push(new q.Point(color));
+      }
+      // Pad remaining keys with default color
+      else {
+        qPoints.push(new q.Point(this.config.defaultColor || '#000000'));
       }
     }
 
-    // No approvals found
-    return false;
+    return qPoints;
   }
 
+  /**
+   * Determines the status color for a pull request.
+   * 
+   * @param {*} pullRequest - The pull request to evaluate.
+   */
   getPRStatusColor(pullRequest) {
     const reviewers = pullRequest.reviewers;
     let isApproved = false;
@@ -128,38 +157,32 @@ class QTest extends q.DesktopApp {
     return "#0000ff"; // Blue for no outcome
   }
 
-  generatePoints(pullRequests) {
-    let qPoints = [];
-    const numPRs = pullRequests.length;
-
-    // Generate 10 points
-    for (let i = 0; i < TOTAL_KEYS; i++) {
-      if (i < numPRs) {
-        // Get the status color for this PR
-        const color = this.getPRStatusColor(pullRequests[i]);
-        // Push a new point
-        qPoints.push(new q.Point(color));
-      }
-      // Pad remaining keys with default color
-      else {
-        qPoints.push(new q.Point(this.config.defaultColor || '#000000'));
-      }
+  /**
+   * Calculates the hash for the list of pull requests.
+   * 
+   * @param {*} pullRequests - The list of pull requests being hashed.
+   */
+  calculatePRListHash(pullRequests) {
+    // Extract the list of PR IDs
+    const prIds = [];
+    for(var i = 0; i < pullRequests.length; i++) {
+      prIds.push(pullRequests[i].id);
     }
 
-    return qPoints;
-  }
+    // Sort the list of PR  IDs
+    prIds = prIds.sort();
 
-  getPRListHash(pullRequests) {
+    // Concatenate the IDs to form the hash
     var hash = "";
-    for(var i = 0; i < pullRequests.length; i++) {
-      hash += pullRequests[i].id;
+    for (var prId in prIds) {
+      hash += prId;
     }
     return hash;
   }
 }
 
 module.exports = {
-  QTest: QTest
+  PRStatusMonitor: PRStatusMonitor
 };
 
-const qTest = new QTest();
+const prStatusMonitor = new PRStatusMonitor();
