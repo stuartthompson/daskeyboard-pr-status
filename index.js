@@ -29,7 +29,7 @@ class PRStatusMonitor extends q.DesktopApp {
     let pullRequests = await this.getPullRequests();
     
     // Store list of ids
-    const newListHash = this.getPRListHash(pullRequests);
+    const newListHash = this.calculatePRListHash(pullRequests);
     var prListChanged = false;
     if (newListHash !== prListHash) {
       prListChanged = true;
@@ -164,7 +164,7 @@ class PRStatusMonitor extends q.DesktopApp {
    */
   calculatePRListHash(pullRequests) {
     // Extract the list of PR IDs
-    const prIds = [];
+    var prIds = [];
     for(var i = 0; i < pullRequests.length; i++) {
       prIds.push(pullRequests[i].id);
     }
